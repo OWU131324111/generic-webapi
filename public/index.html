@@ -1,44 +1,259 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>アプリ一覧</title>
-    <style>
-        body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #333; }
-        h1 { font-size: 1.4rem; }
-        ul { list-style: none; padding: 0; }
-        li { padding: 12px 0; border-bottom: 1px solid #eee; }
-        a { font-size: 1.1rem; text-decoration: none; color: #0366d6; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>パフェデザインメーカー</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(135deg, #fdf2f8 0%, #fffbeb 50%, #f5f3ff 100%);
+      min-height: 100vh; margin: 0; padding: 24px 16px 60px; color: #374151; line-height: 1.6;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    .back-link {
+      display: inline-block; color: #6b7280; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 8px; background: #fff; border: 1px solid #e5e7eb; margin-bottom: 16px;
+    }
+    header { text-align: center; margin-bottom: 24px; }
+    .badge {
+      display: inline-block; background: #fce7f3; color: #db2777; font-size: 12px;
+      font-weight: bold; padding: 4px 14px; border-radius: 999px; margin-bottom: 8px;
+    }
+    h1 { font-size: 24px; margin: 0 0 6px; color: #831843; }
+    .subtitle { color: #6b7280; font-size: 14px; margin: 0; }
+    .form-card {
+      background: #fff; padding: 24px; border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(219, 39, 119, 0.08); margin-bottom: 24px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 14px; }
+    .form-grid .form-group { margin-bottom: 0; }
+    label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; }
+    input, select {
+      width: 100%; padding: 11px 12px; font-size: 15px;
+      border: 1.5px solid #e5e7eb; border-radius: 10px; background: #fff;
+    }
+    .btn-row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+    @media (max-width: 500px) { .btn-row { grid-template-columns: 1fr; } }
+    .submit-btn {
+      padding: 14px; font-size: 15px; font-weight: bold; color: #fff;
+      background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+      border: none; border-radius: 12px; cursor: pointer;
+    }
+    .random-btn {
+      padding: 14px; font-size: 14px; font-weight: bold; color: #be185d;
+      background: #fce7f3; border: 1.5px solid #fbcfe8; border-radius: 12px; cursor: pointer;
+    }
+    .submit-btn:disabled, .random-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    #status { text-align: center; font-weight: bold; color: #db2777; margin-bottom: 16px; }
+
+    /* パフェのメニュー＆イラスト表示カード */
+    .menu-header {
+      background: #fff; border: 2px solid #fbcfe8; border-radius: 20px;
+      padding: 22px; text-align: center; margin-bottom: 18px; display: none;
+    }
+    .menu-header.visible { display: block; }
+    .menu-label { font-size: 11px; font-weight: bold; color: #db2777; display: block; }
+    .parfait-title { font-size: 20px; color: #831843; margin: 4px 0 14px; }
+    .illust-box {
+      display: inline-block; background: #fffbeb; border-radius: 16px;
+      padding: 14px 28px; border: 1px dashed #fde68a;
+    }
+
+    .layer-list { display: flex; flex-direction: column; gap: 12px; }
+    .layer-card {
+      background: #fff; border-radius: 16px; padding: 18px 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04); border: 1px solid #fbcfe8;
+    }
+    .layer-step {
+      display: inline-block; font-size: 12px; font-weight: bold; color: #db2777;
+      background: #fce7f3; padding: 2px 10px; border-radius: 999px; margin-bottom: 6px;
+    }
+    .layer-item { font-size: 17px; margin: 0 0 6px; }
+    .layer-desc { font-size: 14px; color: #4b5563; margin: 0 0 10px; }
+    .layer-pairing {
+      background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 8px;
+      padding: 8px 12px; font-size: 13px; color: #92400e;
+    }
+  </style>
 </head>
 <body>
-    <h1>アプリ一覧</h1>
-    <ul id="appList"></ul>
+  <div class="container">
+    <a href="index.html" class="back-link">← トップへ戻る</a>
+    <header>
+      <span class="badge">PARFAIT ATELIER</span>
+      <h1>パフェデザインメーカー</h1>
+      <p class="subtitle">気分を選ぶか「おまかせ」を押すと、イラスト付きの4層パフェをデザインします</p>
+    </header>
 
-    <script>
-        // サーバーから .html ファイルの一覧を取得してリンクを表示する
-        async function loadPages() {
-            const response = await fetch('/api/pages');
-            const files = await response.json();
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="moodInput">今の気分・テーマ</label>
+          <input type="text" id="moodInput" placeholder="例：頑張った自分へのご褒美">
+        </div>
+        <div class="form-group">
+          <label for="seasonInput">季節・イメージカラー</label>
+          <select id="seasonInput">
+            <option value="春・淡いピンクや白">春・淡いピンクや白</option>
+            <option value="夏・爽やかなミントやブルー">夏・爽やかなミントやブルー</option>
+            <option value="秋・こっくりした黄金色やブラウン">秋・こっくりした黄金色やブラウン</option>
+            <option value="冬・きらめく夜空やベリーレッド" selected>冬・きらめく夜空やベリーレッド</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="favoriteInput">入れたいフルーツ・好きな素材（任意）</label>
+        <input type="text" id="favoriteInput" placeholder="例：いちご、ピスタチオ、アールグレイ紅茶">
+      </div>
+      <div class="btn-row">
+        <button id="generateBtn" class="submit-btn" onclick="generateParfait(false)">パフェをデザインする</button>
+        <button id="randomBtn" class="random-btn" onclick="generateParfait(true)">🎲 おまかせ1品</button>
+      </div>
+    </div>
 
-            const list = document.getElementById('appList');
-            if (files.length === 0) {
-                list.innerHTML = '<li>public/ に .html ファイルがありません。</li>';
-                return;
-            }
+    <p id="status"></p>
+    <div id="menuHeader" class="menu-header">
+      <span class="menu-label">TODAY'S SPECIAL PARFAIT</span>
+      <h2 id="parfaitTitle" class="parfait-title"></h2>
+      <div id="illustBox" class="illust-box"></div>
+    </div>
+    <div id="resultContainer" class="layer-list"></div>
+  </div>
 
-            files.forEach(name => {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = name;
-                a.textContent = name;
-                li.appendChild(a);
-                list.appendChild(li);
-            });
-        }
+  <script>
+    const randomThemes = [
+      { mood: '休日の午後にゆったり読書する気分', season: '春・淡いピンクや白', favorite: 'いちごと桜のクリーム' },
+      { mood: '海辺のカフェでリフレッシュしたい気分', season: '夏・爽やかなミントやブルー', favorite: 'レモンとソーダジュレ' },
+      { mood: '少し大人なほろ苦いご褒美タイム', season: '秋・こっくりした黄金色やブラウン', favorite: 'キャラメルとナッツ、珈琲' },
+      { mood: 'キラキラした夜景を眺める特別な夜', season: '冬・きらめく夜空やベリーレッド', favorite: 'カシスとホワイトチョコ' }
+    ];
 
-        loadPages();
-    </script>
+    async function generateParfait(isRandom) {
+      let mood = document.getElementById('moodInput').value.trim();
+      let season = document.getElementById('seasonInput').value;
+      let favorite = document.getElementById('favoriteInput').value.trim();
+
+      if (isRandom) {
+        const pick = randomThemes[Math.floor(Math.random() * randomThemes.length)];
+        mood = pick.mood;
+        season = pick.season;
+        favorite = pick.favorite;
+        document.getElementById('moodInput').value = mood;
+        document.getElementById('seasonInput').value = season;
+        document.getElementById('favoriteInput').value = favorite;
+      } else if (!mood) {
+        alert('今の気分を入力するか、「🎲 おまかせ1品」を押してください！');
+        return;
+      }
+
+      if (!favorite) favorite = 'パティシエにおまかせ';
+
+      const btn = document.getElementById('generateBtn');
+      const rBtn = document.getElementById('randomBtn');
+      const status = document.getElementById('status');
+      const menuHeader = document.getElementById('menuHeader');
+      const parfaitTitle = document.getElementById('parfaitTitle');
+      const illustBox = document.getElementById('illustBox');
+      const container = document.getElementById('resultContainer');
+
+      btn.disabled = true;
+      rBtn.disabled = true;
+      btn.textContent = 'パティシエがイラストとパフェを作成中...';
+      status.textContent = '';
+      menuHeader.classList.remove('visible');
+      container.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: mood, mood, season, favorite })
+        });
+        if (!res.ok) throw new Error('サーバーエラー');
+
+        const raw = await res.text();
+        const parsed = JSON.parse(raw);
+        const layers = parsed.data || [];
+
+        const defaultColors = ['#fb7185', '#fef3c7', '#f472b6', '#e11d48'];
+        const c1 = layers[0]?.color || defaultColors[0];
+        const c2 = layers[1]?.color || defaultColors[1];
+        const c3 = layers[2]?.color || defaultColors[2];
+        const c4 = layers[3]?.color || defaultColors[3];
+
+        // 4層の色を使ったパフェの可愛いSVGイラストを生成
+        illustBox.innerHTML = buildParfaitSvg(c1, c2, c3, c4);
+
+        const steps = ['1層目：トップの飾り', '2層目：メインのアイス', '3層目：食感とソース', '4層目：グラスの底の余韻'];
+        const name = layers[0]?.parfaitName || `${mood}のスペシャルパフェ`;
+        parfaitTitle.textContent = `『${name}』`;
+        menuHeader.classList.add('visible');
+
+        layers.forEach((layer, i) => {
+          const card = document.createElement('div');
+          const layerColor = layer.color || defaultColors[i] || '#ec4899';
+          card.className = 'layer-card';
+          card.style.borderLeft = `6px solid ${layerColor}`;
+          card.innerHTML = `
+            <span class="layer-step">${esc(layer.step || steps[i] || (i + 1) + '層目')}</span>
+            <h3 class="layer-item">${esc(layer.item || layer.name || '特製パーツ')}</h3>
+            <p class="layer-desc">${esc(layer.description || '')}</p>
+            <div class="layer-pairing">✨ ${esc(layer.pairing || '')}</div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        console.error(e);
+        status.textContent = 'エラーが発生しました。もう一度お試しください。';
+      } finally {
+        btn.disabled = false;
+        rBtn.disabled = false;
+        btn.textContent = 'パフェをデザインする';
+      }
+    }
+
+    function buildParfaitSvg(c1, c2, c3, c4) {
+      return `
+        <svg width="160" height="210" viewBox="0 0 160 210" xmlns="http://www.w3.org/2000/svg">
+          <!-- ウエハース・飾り -->
+          <rect x="96" y="14" width="14" height="44" rx="4" transform="rotate(22 96 14)" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+          <!-- 1層目：トップのアイス＆フルーツ -->
+          <circle cx="80" cy="56" r="28" fill="${esc(c1)}"/>
+          <circle cx="62" cy="44" r="9" fill="#f43f5e"/>
+          <path d="M62 35 Q66 26 72 28" stroke="#16a34a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- クリームの雲 -->
+          <path d="M44 74 Q60 62 80 72 Q100 62 116 74 Z" fill="#fff"/>
+          <!-- グラスの中の層（クリップパス） -->
+          <defs>
+            <clipPath id="glassClip">
+              <path d="M44 74 L116 74 L104 142 Q100 156 80 156 Q60 156 56 142 Z"/>
+            </clipPath>
+          </defs>
+          <g clip-path="url(#glassClip)">
+            <!-- 2層目 -->
+            <rect x="40" y="74" width="80" height="28" fill="${esc(c2)}"/>
+            <!-- 3層目 -->
+            <rect x="40" y="102" width="80" height="26" fill="${esc(c3)}"/>
+            <!-- 4層目 -->
+            <rect x="40" y="128" width="80" height="30" fill="${esc(c4)}"/>
+          </g>
+          <!-- グラスの輪郭と脚 -->
+          <path d="M44 74 L116 74 L104 142 Q100 156 80 156 Q60 156 56 142 Z" fill="none" stroke="#9ca3af" stroke-width="3"/>
+          <line x1="80" y1="156" x2="80" y2="188" stroke="#9ca3af" stroke-width="4"/>
+          <ellipse cx="80" cy="190" rx="28" ry="6" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2.5"/>
+          <!-- ハイライト -->
+          <line x1="54" y1="84" x2="60" y2="136" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+        </svg>
+      `;
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>
